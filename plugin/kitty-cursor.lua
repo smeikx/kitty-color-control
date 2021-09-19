@@ -12,21 +12,13 @@ function match ()
 	set(guifg)
 end
 
-local options = {
-	on_stdout =
-		function (_, colors, _)
-			local cursor_color = table.concat(colors, ' '):match('cursor_text_color%s+#([a-f0-9]+)')
-			if cursor_color then
-				set(cursor_color)
-			end
-		end,
-	stdout_buffered = true,
-	detach = true
-}
 function restore ()
-	-- XXX: This does not work when nvim is closed, as the callback will never be executed.
-	-- TODO: Maybe do it with shell script only.
-	vim.fn.jobstart(kitty_cmd..' get-colors -c', options)
+	vim.fn.jobstart([[
+		kitty @ --to=unix:@hellokitty set-colors cursor_text_color='#'$( \
+			kitty @ --to=unix:@hellokitty get-colors -c \
+			| sed -nE 's/.*cursor_text_color\s+#([a-f0-9]{6}).*/\1/p' \
+		)
+	]], {detach = true})
 end
 
 _G.kittyCursorColor = {
