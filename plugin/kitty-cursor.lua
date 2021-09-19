@@ -13,12 +13,12 @@ function match ()
 end
 
 function restore ()
-	vim.fn.jobstart([[
-		kitty @ --to=unix:@hellokitty set-colors cursor_text_color='#'$( \
-			kitty @ --to=unix:@hellokitty get-colors -c \
+	vim.fn.jobstart(([[
+		%s set-colors cursor_text_color='#'$( \
+			%s get-colors -c \
 			| sed -nE 's/.*cursor_text_color\s+#([a-f0-9]{6}).*/\1/p' \
 		)
-	]], {detach = true})
+	]]):format(kitty_cmd, kitty_cmd), {detach = true})
 end
 
 _G.kittyCursorColor = {
