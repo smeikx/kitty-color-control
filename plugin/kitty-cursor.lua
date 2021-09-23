@@ -1,75 +1,62 @@
 -- TODO: make this customisable
-local kitty_cmd = 'kitty @ --to=unix:@hellokitty'
+local address = vim.g.kitty_address
+local kitty_cmd = string.format('kitty @%s', address and ' --to='..address or '')
 
-function setCursor (hexColor)
-	vim.fn.jobstart(string.format('%s set-colors cursor_text_color=\\#%s', kitty_cmd, hexColor))
-end
-
-function matchCursor ()
-	local guifg =
-		vim.api.nvim_exec('hi Cursor', true):match('guifg=#([a-f0-9]+)')
-		or vim.api.nvim_exec('hi Normal', true):match('guibg=#([a-f0-9]+)')
-	setCursor(guifg)
-end
-
-function restoreCursor ()
-	vim.fn.jobstart(([[
-		%s set-colors cursor_text_color='#'$( \
-			%s get-colors -c \
-			| sed -nE 's/.*cursor_text_color\s+#([a-f0-9]{6}).*/\1/p' \
-		)
-	]]):format(kitty_cmd, kitty_cmd), {detach = true})
-end
-
-local normal = {
-	bg = '',
-	fg = ''
+local cache = {
+	background = '',
+	foreground = '',
+	cursor = ''
 }
-function setNormal ()
+
+-- set kitty’s colors to the cached values
+function set ()
 	vim.fn.jobstart(string.format(
-		'%s set-colors background=\\#%s foreground=\\#%s',
-		kitty_cmd, normal.bg, normal.fg)
+		"%s set-colors cursor_text_color='%s' background='%s' foreground='%s'",
+		kitty_cmd, cache.cursor, cache.background, cache.foreground)
 	)
 end
 
-function matchNormal ()
-	local scheme_colors = vim.api.nvim_exec('hi Normal', true)
-	normal.fg = scheme_colors:match('guifg=#([a-f0-9]+)')
-	normal.bg = scheme_colors:match('guibg=#([a-f0-9]+)')
+-- determine and cache color values as defined in the scheme
+function match ()
+	local normalColors = vim.api.nvim_exec('hi Normal', true)
+	cache.background = normalColors:match('guibg=(#[a-f0-9]+)')
+	cache.foreground = normalColors:match('guifg=(#[a-f0-9]+)')
+
+	-- if it is not a color value, it is probably ‘bg’
+	cache.cursor =
+		vim.api.nvim_exec('hi Cursor', true):match('guifg=(#[a-f0-9]+)')
+		or cache.background
+
 	vim.cmd('hi Normal NONE')
-	setNormal()
+	set()
 end
 
-function restoreNormal ()
-end
-
+-- restore kitty’s colors
 function restore ()
 	vim.fn.jobstart(([[
 		%s get-colors -c \
-		| grep -e 'cursor_text_color' -e '^background' -e '^foreground'
+		| grep -e 'cursor_t' -e '^back' -e '^fore' \
 		| sed -nE 's/.+#([a-f0-9]{6}).*/\1/p' \
-		| read bg cursor fg; %s set-colors cursor_text_color='#'$( \
-		)
-	]]):format(kitty_cmd, kitty_cmd), {detach = true})
+		| tr '\n' ' ' | sed 's/ $/\n/' \
+		| { read c b f; %s set-colors cursor_text_color=\\#$c background=\\#$b foreground=\\#$f; }
+	]]):format(kitty_cmd, kitty_cmd), {detach=true})
 end
 
+-- call once, as the color scheme is usually loaded before this
+match()
+
+-- they have to be part of the global environment to be callable in autocommands
 _G.kcc = {
-	--set = setCursor, -- uncomment if needed
-	cursor = {
-		match = matchCursor,
-		restore = restoreCursor
-	},
-	normal = {
-		match = matchNormal,
-		restore = restoreNormal
-	}
+	set = set,
+	match = match,
+	restore = restore
 }
 
 vim.cmd([[
 	aug kitty_cursor
 		au!
 		au ColorScheme * call v:lua.kcc.match()
-		au VimEnter,VimResume * call v:lua.kcc.match()
+		au VimEnter,VimResume * call v:lua.kcc.set()
 		au VimLeavePre,VimSuspend * call v:lua.kcc.restore()
 	aug END
 ]])
