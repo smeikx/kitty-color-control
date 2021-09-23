@@ -38,7 +38,7 @@ function restore ()
 		| grep -e 'cursor_t' -e '^back' -e '^fore' \
 		| sed -nE 's/.+#([a-f0-9]{6}).*/\1/p' \
 		| tr '\n' ' ' | sed 's/ $/\n/' \
-		| { read c b f; %s set-colors cursor_text_color=\\#$c background=\\#$b foreground=\\#$f; }
+		| { read c b f; %s set-colors cursor_text_color='#'$c background='#'$b foreground='#'$f; }
 	]]):format(kitty_cmd, kitty_cmd), {detach=true})
 end
 
