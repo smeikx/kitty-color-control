@@ -33,6 +33,8 @@ end
 
 -- restore kitty’s colors
 function restore ()
+	-- TODO Try assimilating `tr | sed` into the first `sed`:
+	-- https://stackoverflow.com/a/1252191
 	vim.fn.jobstart(([[
 		%s get-colors -c \
 		| grep -e 'cursor_t' -e '^back' -e '^fore' \

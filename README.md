@@ -20,7 +20,7 @@ Or with lua:
 
 As this plugin is a scratch to my personal itch, it does not cover all possible scenarios.
 
-- This most likely only works in a UNIX like environment, as it depends on a POSIX compliant shell, `grep`, `sed` and `tr`.
+- This plugin depends on a POSIX compliant shell, `grep`, `sed` and `tr`.
 - When extracting colors from a set highlight only `guibg` and `guifg` are considered.
 - When the `Cursor`’s `guifg` is not a hex color, `Normal`’s `guibg` is used.
 - There is more inline shell script than I like.
