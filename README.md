@@ -1,4 +1,4 @@
-# Kitt Color Control
+# Kitty Color Control
 
 This simple plugin is made for usage in Neovim’s TUI inside kitty, it does two things:
 
