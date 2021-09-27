@@ -1,4 +1,3 @@
--- TODO: make this customisable
 local address = vim.g.kitty_address
 local kitty_cmd = string.format('kitty @%s', address and ' --to='..address or '')
 
@@ -35,6 +34,7 @@ end
 function restore ()
 	-- TODO Try assimilating `tr | sed` into the first `sed`:
 	-- https://stackoverflow.com/a/1252191
+	-- TODO Maybe cache this (the string and/or the result).
 	vim.fn.jobstart(([[
 		%s get-colors -c \
 		| grep -e 'cursor_t' -e '^back' -e '^fore' \
@@ -47,7 +47,7 @@ end
 -- call once, as the color scheme is usually loaded before this
 match()
 
--- they have to be part of the global environment to be callable in autocommands
+-- the above functions have to be added to the global environment to be callable in autocommands
 _G.kcc = {
 	set = set,
 	match = match,
