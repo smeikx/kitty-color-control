@@ -29,7 +29,6 @@ As this plugin is a scratch to my personal itch, it does not cover all possible 
 
 - This plugin depends on a POSIX compliant shell, `grep`, `sed` and `tr`.
 - When extracting colors from a set highlight group only `guibg` and `guifg` are considered.
-- When the `Cursor`’s `guifg` is not a hex color, `Normal`’s `guibg` is used.
 - The whole plugin is one single file. Maybe it should be more? (I don’t know about nvim plugin best practices).
 - There is more inline shell script than I like.
 - As it needs seven external commands and a subshell, all connected by pipe, to restore colors when leaving nvim, there is a noticable delay.

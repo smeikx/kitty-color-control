@@ -17,14 +17,11 @@ end
 
 -- determine and cache color values as defined in the scheme
 function match ()
-	local normalColors = vim.api.nvim_exec('hi Normal', true)
-	cache.background = normalColors:match('guibg=(#[a-f0-9]+)')
-	cache.foreground = normalColors:match('guifg=(#[a-f0-9]+)')
+	local normal_colors = vim.api.nvim_get_hl_by_name('Normal', true)
+	cache.background = string.format('#%06X', normal_colors.background)
+	cache.foreground = string.format('#%06X', normal_colors.foreground)
 
-	-- if it is not a color value, it is probably ‘bg’
-	cache.cursor =
-		vim.api.nvim_exec('hi Cursor', true):match('guifg=(#[a-f0-9]+)')
-		or cache.background
+	cache.cursor = string.format('#%06X', vim.api.nvim_get_hl_by_name('Cursor', true).foreground)
 
 	vim.cmd('hi Normal NONE')
 	set()
