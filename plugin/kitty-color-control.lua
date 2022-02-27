@@ -11,10 +11,19 @@ local kitty_osc, scheme_osc
 
 local osc_template = [[]10;%s\]11;%s\]12;%s\]]
 
+function match_colors ()
+	vim.cmd('hi Normal NONE')
+	tty:write(scheme_osc, function (err)
+		assert(not err, err)
+	end)
+end
+
 do
 	-- OSC for getting kitty’s current colors
 	local osc = osc_template:format('?', '?', '?')
-	function update_kitty_osc ()
+	-- Fetch current colors from Kitty and update the OSC for setting them.
+	-- If ‘match’ is true, also match colors.
+	function update_kitty_osc (match)
 		tty:write(osc, function (err)
 			assert(not err, err)
 			tty:read_start(function (err, data)
@@ -33,6 +42,10 @@ do
 				-- I do not know how ‘read_start’ decides how often it calls the callback and when to stop,
 				-- but immediately calling read_stop() does the trick. ¯\_(ツ)_/¯
 				tty:read_stop()
+				if match then
+					-- I first tried vim.schedule_wrap(match_colors), but this does not work. -_-
+					vim.defer_fn(match_colors, 1)
+				end
 			end)
 		end)
 	end
@@ -47,26 +60,20 @@ function update_scheme_osc ()
 	scheme_osc = osc_template:format(foreground, background, cursor)
 end
 
-function match_colors ()
-	vim.cmd('hi Normal NONE')
-	tty:write(scheme_osc, function (err)
-		assert(not err, err)
-	end)
-end
-
 function restore_kitty_colors ()
 	tty:write(kitty_osc, function (err)
 		assert(not err, err)
 	end)
+
 end
 
 function restore_scheme_colors ()
 end
 
 
-update_kitty_osc()
 update_scheme_osc()
-match_colors()
+update_kitty_osc(true)
+--match_colors()
 
 -- functions have to be added to the global environment to be callable in autocommands
 _G.kcc = {
@@ -75,10 +82,19 @@ _G.kcc = {
 		match_colors()
 	end,
 	on_enter = function ()
-		update_kitty_osc()
+		--update_kitty_osc(true)
 		match_colors()
 	end,
-	on_exit = restore_kitty_colors
+	on_exit = function ()
+		--vim.cmd([[call writefile(["\x1b]11;green\x1b\\"], '/tmp/vim.txt', 'b')]]) -- XXX das geht!
+		--vim.fn.writefile({[[]11;green\]]}, '/dev/tty', 'b') -- XXX das geht auch!
+		vim.fn.writefile({kitty_osc}, '/dev/tty', 'b')
+		--vim.fn.jobstart("printf '\x1b]11;blue\x1b\\'", {detach=true})
+		--vim.fn.jobstart(string.format("printf '%s' >/dev/tty", kitty_osc), {detach=true})
+	end,
+	restore_kitty_colors = restore_kitty_colors,
+	match_colors = match_colors,
+	update_kitty_osc = update_kitty_osc
 }
 
 vim.cmd([[
