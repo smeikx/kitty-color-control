@@ -1,3 +1,13 @@
+# Current State
+
+**This does not work well.**
+
+**Have a look at my latest attempts of making this work more reliably and across platforms in the `osc` branch, [and join the discussion](https://github.com/smeikx/kitty-color-control/issues/2) if you really want this plugin to work or know how to improve it.**
+
+**Neovim does not make it easy to send OSC to the terminal (without crashing). I have currently abandoned all efforts in favour of just writing my own color scheme. But feel free to fork and/or discuss, I am curious if there is a good solution to this.**
+
+---
+
 # Kitty Color Control
 
 This simple plugin is made for usage in neovim’s TUI inside kitty; it does two things:
